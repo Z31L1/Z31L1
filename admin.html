@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>AI-COMMANDER V16 | Stefan Zeilberger</title>
+    <style>
+        :root { --neon: #00f3ff; --bg: #050505; --accent: #f1c40f; --text: #00ff41; --panel-bg: #0a0a0a; }
+        body { background: var(--bg); color: #fff; font-family: 'Courier New', monospace; display: flex; gap: 15px; padding: 15px; margin: 0; height: 100vh; box-sizing: border-box; overflow: hidden; }
+        
+        .panel { border: 1px solid var(--neon); padding: 20px; background: var(--panel-bg); display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,243,255,0.1); }
+        .side-panel { flex: 1; min-width: 350px; }
+        .main-panel { flex: 2; }
+        
+        h3 { color: var(--neon); text-transform: uppercase; border-bottom: 2px solid var(--neon); margin-top: 0; padding-bottom: 5px; font-size: 1.1em; letter-spacing: 2px; }
+        label { font-size: 0.75em; color: var(--neon); margin-top: 12px; display: block; font-weight: bold; text-transform: uppercase; }
+        
+        textarea, select, input { background: #111; border: 1px solid #333; color: var(--text); padding: 12px; margin-bottom: 10px; font-family: inherit; width: 100%; box-sizing: border-box; font-size: 0.9em; outline: none; }
+        textarea:focus { border-color: var(--neon); }
+        
+        .hidden { display: none !important; }
+        .disabled-overlay { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
+        
+        button { background: var(--neon); color: #000; padding: 14px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; text-transform: uppercase; width: 100%; }
+        button:hover:not(:disabled) { background: #fff; box-shadow: 0 0 20px var(--neon); }
+        
+        #ai-output-raw { height: 35%; font-size: 0.85em; color: #ddd; white-space: pre-wrap; overflow-y: auto; background: #000; padding: 10px; border: 1px solid #222; }
+        #feedback-container { flex-grow: 1; border: 2px solid var(--accent); padding: 15px; background: #1a1a00; display: flex; flex-direction: column; overflow: hidden; margin-top: 10px; }
+        #suggestion-list { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
+        
+        .sugg-item { display: flex; gap: 10px; background: #000; padding: 8px; border: 1px solid #444; margin-bottom: 4px; align-items: center; border-left: 3px solid var(--accent); }
+        
+        #ai-output-final { flex-grow: 1; font-size: 1em; color: #fff; background: #000; border: 1px solid #333; line-height: 1.4; padding: 10px; }
+        .save-btn { background: var(--accent) !important; color: #000 !important; margin-top: 10px; }
+        #status-log { font-size: 0.75em; color: var(--accent); margin-top: 10px; text-align: center; font-weight: bold; padding-top: 5px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+</head>
+<body>
+
+    <div class="panel side-panel">
+        <h3>01_ZENTRALE</h3>
+        <div id="auth-section">
+            <button onclick="checkAuth()">KERN ENTSPERREN</button>
+        </div>
+        <div id="model-section" class="disabled-overlay">
+            <label>KI_KERN AUSWAHL:</label>
+            <select id="ai-model" onchange="enableAnalysis()"></select>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #222; margin: 10px 0;">
+        
+        <label>A) JOB_DATEIEN:</label>
+        <input type="file" id="job-files" multiple>
+        <textarea id="job-desc" style="height: 60px;" placeholder="Job-Details..."></textarea>
+        
+        <label>B) MEINE SKILLS:</label>
+        <input type="file" id="my-files" multiple>
+        
+        <label>C) STIL_DIREKTIVE:</label>
+        <textarea id="style-directive" placeholder="Sarkastisch, direkt..."></textarea>
+        
+        <div id="analysis-trigger" class="disabled-overlay">
+            <button id="btn-main" onclick="processAI()">TIEFENANALYSE STARTEN</button>
+        </div>
+    </div>
+
+    <div class="panel main-panel">
+        <h3>02_STRATEGIE_LOG</h3>
+        <textarea id="ai-output-raw" placeholder="Warte auf Input..."></textarea>
+        <div id="pipeline-control" class="hidden" style="border: 2px solid var(--accent); padding: 10px; margin-top: 5px; background: #1a1a00;">
+        <p style="color: var(--accent); font-size: 0.8em; margin: 0 0 10px 0;">PROMPT-EDITOR AKTIV: Editiere den Text oben und schicke ihn dann ab.</p>
+        <button id="btn-confirm" onclick="resumePipeline()" style="background: #2ecc71; color: #000; font-weight: bold;">
+            Befehl an KI senden (STAGE BESTÄTIGEN)
+        </button>
+    </div>
+        <div id="feedback-container" class="hidden">
+            <label style="color: var(--accent);">RE-SYNCHRONISATION:</label>
+            <div id="suggestion-list"></div>
+            <button onclick="processAI(true)" style="background: var(--accent);">RE-KALIBRIEREN</button>
+        </div>
+    </div>
+
+    <div class="panel main-panel">
+        <h3>03_OUTPUT</h3>
+        <label>ADRESSE:</label>
+        <textarea id="target-address" style="height: 60px;"></textarea>
+        <label>BEWERBUNG:</label>
+        <textarea id="ai-output-final"></textarea>
+        <button class="save-btn" onclick="clientSave()">DATEI HERUNTERLADEN (JSON)</button>
+        <div id="status-log">SYSTEM STATUS: BEREIT.</div>
+    </div>
+
+<script>
+    let resolveManualStep;
+    let vault = { geminiKey: null };
+    let currentResponse = null;
+    let firmenAnforderungen = []; // Die Jobs (Firma)
+    let arbeiterProfil = [];  
+    let lastRequestTime = 0;
+    const API_COOLDOWN = 5000;
+
+    function updateLog(msg) { document.getElementById('status-log').innerText = "STATUS: " + msg; }
+
+    async function checkAuth() {
+        const passphrase = window.location.hash.substring(1);
+        const decrypt = async (fileName) => {
+        const res = await fetch(`data/me.enc`);
+        if (!res.ok) throw new Error(`${fileName}.enc nicht gefunden`);
+        
+        const base64Data = await res.text();
+        const buffer = Uint8Array.from(atob(base64Data.trim()), c => c.charCodeAt(0));
+        
+        // --- 1. Struktur-Extraktion (Synchron zu Python) ---
+        const iv = buffer.slice(0, 12);
+        const tag = buffer.slice(12, 28);
+        const ciphertext = buffer.slice(28);
+
+        // --- 2. Key-Sync (Null-Byte Padding) ---
+        const encoder = new TextEncoder();
+        const keyArray = new Uint8Array(32); // Alle 32 Bytes sind initial 0x00
+        const encodedPass = encoder.encode(passphrase);
+        keyArray.set(encodedPass.slice(0, 32)); // Key reinkopieren
+
+        const key = await crypto.subtle.importKey(
+            "raw", keyArray, "AES-GCM", false, ["decrypt"]
+        );
+
+        // --- 3. Entschlüsselung (Tag muss ans Ende des Buffers für WebCrypto) ---
+        const dataToDecrypt = new Uint8Array([...ciphertext, ...tag]);
+
+        const decBuffer = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv, tagLength: 128 },
+            key,
+            dataToDecrypt
+        );
+        
+        return JSON.parse(new TextDecoder().decode(decBuffer));
+    };
+
+    try {
+        const pin = prompt("MASTER PIN:");
+        const [me] = await Promise.all([decrypt('me')]);
+        if (pin === me.master_pin) {
+                vault.geminiKey = me.api_key;
+                const apiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${vault.geminiKey}`);
+                const apiData = await apiRes.json();
+                const sel = document.getElementById('ai-model');
+                sel.innerHTML = "<option value=''>-- ENGINE --</option>";
+                apiData.models.filter(m => m.name.includes("gemini")).forEach(m => {
+                    sel.innerHTML += `<option value="${m.name}">${m.name.split('/').pop().toUpperCase()}</option>`;
+                });
+
+                history.replaceState(null, "", window.location.pathname);
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('model-section').classList.remove('disabled-overlay');
+                updateLog("KERN ENTSPERRT.");
+            } else { alert("PIN FALSCH."); }
+        
+    } catch (err) {
+        console.error("Krypto-GAU:", err);
+        }
+    }
+
+    function enableAnalysis() { document.getElementById('analysis-trigger').classList.remove('disabled-overlay'); }
+
+    async function dateienEinlesen() {
+    updateLog("SYNCHRONISIERE DATEN... BITTE WARTEN.");
+    
+    // PDF.js Worker-Pfad (Wichtig für den PDF-Support)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    // Beide Bereiche parallel abarbeiten
+    const [jobs, skills] = await Promise.all([
+        extrahiereDaten('job-files'),
+        extrahiereDaten('my-files')
+    ]);
+
+    firmenAnforderungen = jobs;
+    arbeiterProfil = skills;
+
+    updateLog(`${firmenAnforderungen.length} Firmen-Jobs & ${arbeiterProfil.length} Arbeiter-Skills geladen.`);
+}
+
+ async function extrahiereDaten(inputId) {
+    const dateien = document.getElementById(inputId).files;
+    const ergebnis = [];
+
+    for (const f of dateien) {
+        const isPDF = f.name.toLowerCase().endsWith('.pdf');
+        const isImage = f.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp)$/);
+        const isText = f.name.toLowerCase().match(/\.(txt|md|json)$/);
+
+        try {
+            if (isPDF) {
+                updateLog(`PARSE PDF: ${f.name}`);
+                const arrayBuffer = await f.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let text = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const seite = await pdf.getPage(i);
+                    const inhalt = await seite.getTextContent();
+                    text += inhalt.items.map(item => item.str).join(" ") + "\n";
+                }
+                ergebnis.push({ name: f.name, type: 'text', inhalt: text });
+            } 
+            else if (isImage) {
+                updateLog(`BILD ERKANNT (KEIN TEXT): ${f.name}`);
+                // Wir speichern nur den Hinweis, dass es ein Bild ist, 
+                // statt den binären Code in den Text-Stream zu werfen.
+                ergebnis.push({ name: f.name, type: 'image', inhalt: `[BILD-DATEI: ${f.name}]` });
+            }
+            else if (isText) {
+                const text = await f.text();
+                ergebnis.push({ name: f.name, type: 'text', inhalt: text });
+            }
+        } catch (e) {
+            updateLog(`FEHLER BEI ${f.name}`);
+        }
+    }
+    return ergebnis;
+}
+
+
+function updateLog(msg) { document.getElementById('status-log').innerText = "STATUS: " + msg; }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Das "Gesetzbuch" für die finale Antwort
+const responseSchema = {
+    type: "OBJECT",
+    properties: {
+        "company_name": { type: "STRING", description: "Nur der Name der Firma" },
+        "company_address": { type: "STRING" },
+        "datum": { type: "STRING" },
+        "betreff": { type: "STRING" },
+        "text": { type: "STRING" },
+        "full_analysis_log": { type: "STRING" },
+        "suggestions": { type: "ARRAY", items: { type: "STRING" } }
+    },
+    required: ["company_name", "company_address", "datum", "betreff", "text", "full_analysis_log", "suggestions"]
+};
+// --- 1. DIE PIPELINE-STAGES (Modular & Strukturiert) ---
+const pipelineStages = [
+    { 
+    name: "TARGET_SCOUTING", 
+    task: async (ctx) => {
+        // Wir nehmen gezielt nur das ERSTE Text-Dokument aus den Jobs
+        const jobDoc = firmenAnforderungen.find(d => d.type === 'text');
+        const jobText = jobDoc ? jobDoc.inhalt : "KEIN LESBARER JOB-TEXT GEFUNDEN!";
+        
+        return `STAGE: TARGET_SCOUTING\nDATEI: ${jobDoc?.name || "Unbekannt"}\n\n${jobText}\n\nAUFGABE: Analysiere nur diesen Text.`;
+    }
+},
+    { 
+        name: "SKILL_MAPPING", 
+        task: async (ctx) => {
+            const skills = arbeiterProfil.map(p => p.inhalt).join("\n---\n");
+            return `STAGE: SKILL_MAPPING\nPROFIL STEFAN: ${skills}\nFokussiere: ML, Python, Robotik und die Fähigkeit, komplexe Probleme kostengünstig zu lösen.`;
+        }
+    },
+    {
+    name: "BATTLE_MATCHING",
+    task: async (ctx) => {
+        // Wir holen uns die Ergebnisse der ersten beiden Stages aus dem Context
+        const targetInfo = ctx[0] || "Keine Job-Daten";
+        const skillInfo = ctx[1] || "Keine Skill-Daten";
+
+        return `STAGE: BATTLE_MATCHING
+        
+        INPUT A (FIRMA): ${targetInfo}
+        INPUT B (ICH): ${skillInfo}
+        
+        AUFGABE: Erstelle eine knallharte Gegenüberstellung in Textform:
+        1. MATCHES: Wo decken sich meine Skills (z.B. Python/ML) perfekt mit deren Bedarf?
+        2. GAPS: Wo muss ich rhetorisch nachbessern (z.B. fehlende Branchenkenntnis)?
+        3. KILLER-ARGUMENT: Welches meiner Projekte (z.B. die 50€ Kamera-Lösung) ist der absolute Gamechanger für diese Firma?
+        
+        ANTWORTE NUR ALS ANALYSE-TEXT, NOCH KEIN JSON!`;
+    }
+},
+    {
+    name: "INTEL_GATHERING",
+    task: async (ctx) => {
+        const jobDesc = document.getElementById('job-desc').value || "Firma";
+        return `STAGE: INTEL_GATHERING
+        AUFGABE: Suche mit google_search NUR nach der offiziellen Website von '${jobDesc}' und finde EINE aktuelle News oder ein Projekt.
+        LIMIT: Nur 1 Suchanfrage stellen! 
+        WICHTIG: Wenn du keine Verbindung kriegst, nutze dein internes Wissen über die Branche.`;
+    }
+},
+    {
+        name: "TACTICAL_SYNTHESIS",
+        task: async (ctx) => {
+            const style = document.getElementById('style-directive').value || "Direkt, kompetent";
+            return `STAGE: TACTICAL_SYNTHESIS\n
+                    BASIS: BATTLE_MATCHING & INTEL_GATHERING\n
+                    STIL: ${style}\n
+                    AUFGABE: Erstelle das finale JSON. Das Anschreiben muss beweisen, dass ich nicht nur den Job mache, sondern deren Effizienz steigere.`;
+        }
+    }
+];
+
+async function processAI(isIteration = false) {
+    const model = document.getElementById('ai-model').value;
+    if (!model) return alert("ENGINE WÄHLEN!");
+    
+    const outputFieldRaw = document.getElementById('ai-output-raw');
+    const control = document.getElementById('pipeline-control');
+    const pipelineContext = [];
+
+    try {
+        // SICHERHEITS-CHECK: Zuerst Daten einlesen, falls noch nicht geschehen
+        if (firmenAnforderungen.length === 0 || arbeiterProfil.length === 0) {
+            updateLog("DATEIEN WERDEN GELESEN...");
+            await dateienEinlesen(); 
+        }
+
+        // Jetzt prüfen: Wenn immer noch leer, dann Abbruch!
+        if (firmenAnforderungen.length === 0) {
+            throw new Error("Keine Job-Datei gefunden. Bitte PDF hochladen!");
+        }
+
+        for (const stage of pipelineStages) {
+            updateLog(`BEREITE VOR: ${stage.name}...`);
+            
+            // --- 1. SCHRITT: PROMPT GENERIEREN (STAGE-LOGIK) ---
+            let nextPrompt = await stage.task(pipelineContext);
+
+            // --- 2. SCHRITT: UI-WEICHE (BILD ODER TEXT?) ---
+            let finalPrompt = "";
+            
+            // Erkennung: Ist es ein Base64-Bild oder ein extrem langer String ohne Leerzeichen?
+            const isImage = nextPrompt.startsWith("data:image/");
+            const isBinaryJunk = nextPrompt.length > 1000 && !nextPrompt.includes(" ");
+
+            if (isImage || isBinaryJunk) {
+                updateLog(`AUTO-PILOT: Binärdaten erkannt (${stage.name}). Überspringe Editor.`);
+                finalPrompt = nextPrompt; // Direkt durchreichen
+            } else {
+                // NORMALER TEXT-MODUS: Editor anzeigen und auf Stefan warten
+                outputFieldRaw.value = nextPrompt;
+                outputFieldRaw.readOnly = false;
+                outputFieldRaw.style.border = "2px solid var(--accent)";
+                control.classList.remove('hidden');
+
+                updateLog(`WARTE AUF FREIGABE: ${stage.name}`);
+                
+                // HIER BLEIBT DAS SYSTEM STEHEN
+                await new Promise(resolve => { resolveManualStep = resolve; });
+
+                finalPrompt = outputFieldRaw.value; 
+                control.classList.add('hidden');
+                outputFieldRaw.style.border = "1px solid #222";
+            }
+            
+            updateLog(`API-CALL LÄUFT: ${stage.name}...`);
+
+            // --- 4. SCHRITT: API TATSECHLICH AUFRUFEN (MIT FEHLER-RECOVERY) ---
+            let result = null;
+            let retry = true;
+
+            const isFinalStage = (stage.name === "TACTICAL_SYNTHESIS");
+            const isSearchStage = (stage.name === "INTEL_GATHERING" || stage.name === "WEB_RESEARCH");
+
+            while (retry) {
+                try {
+                    updateLog(`VERSUCHE API-CALL: ${stage.name}...`);
+                    result = await callGemini(
+                        model, 
+                        finalPrompt, 
+                        isFinalStage ? responseSchema : null, 
+                        isSearchStage
+                    );
+                    retry = false; // Erfolg!
+                } catch (e) {
+                    console.error("API-FEHLER:", e);
+                    const choice = confirm(
+                        `QUOTA / FEHLER in ${stage.name}:\n\n` +
+                        `Fehler: ${e.message}\n\n` +
+                        `[OK] = Erneut versuchen (nach 5 Sek Pause)\n` +
+                        `[Abbrechen] = Stage überspringen / Text manuell eingeben`
+                    );
+
+                    if (choice) {
+                        updateLog("WARTE AUF COOLDOWN (5s)...");
+                        await sleep(5000);
+                    } else {
+                        const manualText = prompt("Gib hier das fiktive Ergebnis ein:", "Übersprungen wegen Quota.");
+                        result = manualText || "Stage übersprungen.";
+                        retry = false; 
+                    }
+                }
+            }
+
+            // --- 5. SCHRITT: RESULTAT SPEICHERN & ANZEIGEN ---
+            pipelineContext.push(result);
+            outputFieldRaw.value = `--- ERGEBNIS ${stage.name} ---\n` + 
+                (typeof result === 'object' ? JSON.stringify(result, null, 2) : result);
+            
+            await sleep(2000); 
+        }
+
+        finalizeOutput(pipelineContext[pipelineContext.length - 1]);
+
+    } catch (e) {
+        updateLog("ABBRUCH: " + e.message);
+        console.error("KRITISCHER FEHLER:", e);
+    }
+}
+
+// Diese Funktion wird vom Button "INPUT BESTÄTIGEN" aufgerufen
+function resumePipeline() {
+    console.log("Pipeline-Freigabe erhalten...");
+    if (typeof resolveManualStep === 'function') {
+        resolveManualStep(); // Das löst das 'await new Promise' in der Schleife auf
+    } else {
+        alert("Systemfehler: Kein aktiver Prozess zum Fortsetzen gefunden.");
+    }
+}
+// --- MODIFIZIERTER API-CALL MIT TOOL-SUPPORT ---
+async function callGemini(model, prompt, schema = null, useSearch = false) {
+    const body = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { 
+            temperature: 0.7,
+            topP: 0.95
+        }
+    };
+
+    // Google Search Integration
+    if (useSearch) {
+        body.tools = [{ google_search: {} }];
+    }
+
+    if (schema) {
+        body.generationConfig.response_mime_type = "application/json";
+        body.generationConfig.response_schema = schema;
+    }
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${vault.geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    
+    // Fehlerbehandlung für API-Limits oder Filters
+    if (data.error) throw new Error(`API_GAU: ${data.error.message}`);
+    if (!data.candidates || !data.candidates[0].content) {
+        console.error("Vollständige API-Antwort:", data);
+        throw new Error("API-Verweigerung. Wahrscheinlich Sicherheitsfilter oder Quota.");
+    }
+    
+    const textResult = data.candidates[0].content.parts[0].text;
+    return schema ? JSON.parse(textResult) : textResult;
+}
+
+    function clientSave() {
+    if (!currentResponse) return alert("Nichts zum Speichern da.");
+    
+    // Datum formatieren: TT. Monat JJJJ
+    const options = { day: '2-digit', month: 'long', year: 'numeric' };
+    const formatiertesDatum = new Date().toLocaleDateString('de-DE', options);
+
+    // Firmennamen validieren (Fallback auf 'Bewerbung', falls leer)
+    let firmenName = currentResponse.company_name || "Bewerbung";
+    const safeFileName = firmenName.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+    const finalFileName = `${safeFileName}.json`;
+
+    const exportData = {
+        "company_address": document.getElementById('target-address').value,
+        "datum": formatiertesDatum,
+        "betreff": currentResponse.betreff || "Bewerbung",
+        "text": document.getElementById('ai-output-final').value,
+        "full_analysis_log": currentResponse.full_analysis_log,
+        "suggestions": currentResponse.suggestions
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", finalFileName);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    updateLog(`DATEI: ${finalFileName} gespeichert.`);
+}
+function finalizeOutput(finalJson) {
+    const outputFieldFinal = document.getElementById('ai-output-final');
+    const outputFieldRaw = document.getElementById('ai-output-raw');
+    const targetAddress = document.getElementById('target-address');
+    const feedbackContainer = document.getElementById('feedback-container');
+    const suggestionList = document.getElementById('suggestion-list');
+
+    if (typeof finalJson === 'object' && finalJson !== null) {
+        currentResponse = finalJson;
+        
+        // Werte in Panel 03 schreiben
+        targetAddress.value = finalJson.company_address || "";
+        outputFieldFinal.value = finalJson.text || "Fehler beim Text-Mapping.";
+        outputFieldRaw.value = finalJson.full_analysis_log || "Kein Log vorhanden.";
+        
+        // Feedback-Container (Panel 02 unten) wieder einblenden
+        suggestionList.innerHTML = "";
+        if (finalJson.suggestions && Array.isArray(finalJson.suggestions)) {
+            finalJson.suggestions.forEach(s => {
+                suggestionList.innerHTML += `
+                    <div class="sugg-item">
+                        <input type="checkbox" value="${s}">
+                        <span>${s}</span>
+                    </div>`;
+            });
+            feedbackContainer.classList.remove('hidden'); // DA IST ER WIEDER!
+        }
+        updateLog("STRATEGIE FINALISIERT. RE-KALIBRIERUNG BEREIT.");
+    } else {
+        updateLog("FEHLER: Finale Daten sind kein gültiges JSON.");
+    }
+}
+</script>
+</body>
+</html>

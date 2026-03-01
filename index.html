@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stefan Zeilberger | Lösungsarchitekt</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="hintergrund-container">
+      <img src="./bg.jpg" alt="Industrielle Architektur" id="parallax-bg" />
+    </div>
+
+    <main class="haupt-container">
+      <section class="blatt" id="anschreiben-section">
+        <div class="inhalt-box brief-layout">
+    <div id="my-absender" class="absender-block">
+            <span class="loading-placeholder">System initialisiert...</span>
+        </div>
+
+        <div id="target-address" class="empfaenger-block"></div>
+
+        <div class="datum-zeile">
+            <span class="datum-zeile">Linz, am</span> <span class="datum-zeile" id="current-date"></span>
+        </div>
+
+        <div class="betreff-zeile">
+            <h1 id="dynamic-betreff"></h1>
+        </div>
+
+        <div id="dynamic-content" class="anschreiben-text">
+            </div>
+
+        <div class="gruss-formel">
+            Mit freundlichen Grüßen,
+            <br>
+            <div class="signature">
+                <p><strong>Stefan Zeilberger</strong><p>
+            </div>
+        </div>
+
+        <button class="scroll-down-btn" onclick="scrollToLebenslauf()">
+            System-Boot: Lebenslauf ➔
+        </button>
+    
+</div>
+      </section>
+
+      <section class="blatt links" id="lebenslauf-start">
+        <div class="inhalt-box">
+          <div class="profil-anordnung">
+            <header class="identitaets-modul">
+              <h1>Stefan Zeilberger</h1>
+              <p class="untertitel">
+                Software-Testautomatisierung | Industrieller Lösungsarchitekt
+              </p>
+            </header>
+
+            <div class="profil-container">
+              <img
+                src="./stefan.jpg"
+                alt="Stefan Zeilberger"
+                class="profil-bild"
+              />
+              <div class="bild-glow"></div>
+            </div>
+
+            <blockquote class="manifest">
+              „Technologie als Werkzeug, nicht als Selbstzweck. Wahre Exzellenz
+              entsteht dort, wo operative Planung, wirtschaftlicher Weitblick
+              und Anwenderfokus verschmelzen.“
+            </blockquote>
+
+            <div class="kern-pfeiler-gitter">
+              <div class="pfeiler">
+                <strong>Ursachen-Analyse:</strong>
+                <p>
+                  Fehlerbeseitigung an der Wurzel statt Symptombekämpfung – im
+                  Code wie an der Hardware.
+                </p>
+              </div>
+              <div class="pfeiler">
+                <strong>Ressourcen-Effizienz:</strong>
+                <p>
+                  95% Zeitersparnis durch intelligente Automation und
+                  Echtzeit-Integration.
+                </p>
+              </div>
+              <div class="pfeiler">
+                <strong>System-Architektur:</strong>
+                <p>
+                  Skalierbare Gesamtlösungen zur Reduktion manueller Aufwände
+                  und Erhöhung der Transparenz.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="blatt rechts">
+        <div class="inhalt-box">
+          <h2>Technologie-Bestand</h2>
+          <div class="skill">
+            <span>Test-Architektur (Playwright, Browser-Server)</span>
+            <div class="balken">
+              <div class="fuellung" style="width: 98%"></div>
+            </div>
+          </div>
+          <div class="skill">
+            <span>KI & Vision (Python, OpenCV, Tensorflow)</span>
+            <div class="balken">
+              <div class="fuellung" style="width: 90%"></div>
+            </div>
+          </div>
+          <div class="skill">
+            <span>System-Engineering (C#, Java, SQL, Web)</span>
+            <div class="balken">
+              <div class="fuellung" style="width: 85%"></div>
+            </div>
+          </div>
+          <div class="skill">
+            <span>3D & VR (Blender, Unity, Spatial Mapping)</span>
+            <div class="balken">
+              <div class="fuellung" style="width: 80%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="blatt links">
+        <div class="inhalt-box">
+          <h2>Spezialprojekte</h2>
+          <div class="projekt-gitter">
+            <div class="spezial-karte fokus-gold">
+              <h3>Live Playwright Browser</h3>
+              <p class="tech-tag">Automation | Node.js</p>
+              <p>
+                Eliminierung von 30s-Login-Zyklen durch permanente Sitzungen.
+                Debugging an exakter Fehlerstelle.
+              </p>
+            </div>
+            <div class="spezial-karte fokus-gold">
+              <h3>Automatisierter Test-Generator</h3>
+              <p class="tech-tag">CLI | TUI | High-Privacy Mode</p>
+              <p>
+                Vollautomatische Erstellung komplexer Test-Strukturen.
+                <strong>90% Zeitersparnis</strong> durch standardisierte
+                Code-Injektion.
+              </p>
+
+              <div class="video-container privacy-shield">
+                <video
+                  controls
+                  preload="none"
+                  class="generator-video dimmed">
+                  <source src="1746467288552.mp4" type="video/mp4" />
+                </video>
+                <div class="privacy-overlay">DATA PROTECTED</div>
+              </div>
+            </div>
+            <div class="spezial-karte fokus-gold">
+              <h3>Automatisierter Bewerbungs-Generator Ai powered</h3>
+              <p class="tech-tag">REST | NLP | Prompt Engineering </p>
+              <p>
+                 NLP-gestütztes Framework zur automatisierten Akquise: Algorithmisches Matching von Anforderungsprofilen via REST-Schnittstelle und Prompt-Engineering mit dynamischer Frontend-Hydration durch URL-basierte JSON-Injektion.
+              </p>
+            </div>
+            <div class="spezial-karte">
+              <h3>VR Atomic Builder</h3>
+              <p class="tech-tag">VR | Edutech</p>
+              <p>
+                Haptisches Lernen auf atomarer Ebene: Montage chemischer
+                Formeln.
+              </p>
+            </div>
+            <div class="spezial-karte">
+              <h3>Industrie-Vision-Hack</h3>
+              <p class="tech-tag">ML | Python</p>
+              <p>
+                Präzisions-Offset-Berechnung via 50€-Hardware und Canny-Filter.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="blatt rechts">
+        <div class="inhalt-box stationen-scroll">
+          <h2>Professionelle Leistungsbilanz</h2>
+          <div class="timeline-container">
+            <div class="station active">
+              <div class="jahr-tag">04/2024 – 05/2025</div>
+              <div class="details">
+                <h3>CGM Clinical Österreich GmbH</h3>
+                <p class="position">Test Automation Engineer</p>
+                <ul class="task-list">
+                  <li>
+                    Strategische Portierung und Refaktorierung der
+                    Authentifizierungs-Logik.
+                  </li>
+                  <li>
+                    Entwicklung des <strong>Test-Generators</strong> (90%
+                    Zeitersparnis).
+                  </li>
+                  <li>
+                    Automatisierung des Reportings und nahtlose Integration in
+                    das Aufgabenmanagement.
+                  </li>
+                  <li>High-Level Erweiterung des Playwright-Frameworks.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">05/2022 – 11/2023</div>
+              <div class="details">
+                <h3>CALPANA business consulting GmbH</h3>
+                <p class="position">Software Test Engineer</p>
+                <ul class="task-list">
+                  <li>
+                    Sicherung der Softwarequalität durch hybride Testverfahren
+                    (Manuell & Automatisiert).
+                  </li>
+                  <li>
+                    Durchführung kritischer Regressionstests zur Absicherung von
+                    Business-Logiken.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">07/2021 – 01/2022</div>
+              <div class="details">
+                <h3>GNT Systems</h3>
+                <p class="position">Software Developer C#</p>
+                <ul class="task-list">
+                  <li>
+                    Weiterentwicklung von Dashboard-Systemen und Debugging
+                    komplexer C#-Architekturen.
+                  </li>
+                  <li>
+                    On-Site Deployment und Installation proprietärer
+                    Softwarelösungen.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">06/2020 – 08/2020</div>
+              <div class="details">
+                <h3>Flowery Field</h3>
+                <p class="position">Prozessoptimierer</p>
+                <ul class="task-list">
+                  <li>
+                    Radikale Optimierung interner Produktions- und
+                    Lagerlogistikprozesse.
+                  </li>
+                  <li>
+                    Standortevaluierung Linz und strategische Erweiterung der
+                    Produktpalette.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">11/2018 – 12/2019</div>
+              <div class="details">
+                <h3>Gasser GmbH</h3>
+                <p class="position">Forschung & Entwicklung Mitarbeiter</p>
+                <ul class="task-list">
+                  <li>
+                    Pionierarbeit in AR-gestützter Prozesssicherung und Machine
+                    Learning (Neuronale Netze).
+                  </li>
+                  <li>
+                    Programmierung autonomer Lagerlogistik und KI-basierter
+                    Ladungsträger-Erkennung.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">11/2017 – 08/2018</div>
+              <div class="details">
+                <h3>Virtual Reality Linz</h3>
+                <p class="position">Selbstständig / Founder</p>
+                <ul class="task-list">
+                  <li>
+                    B2B-Innovationen: Spatial Mapping für den Immobilienmarkt
+                    und Virtual Reality Edutech.
+                  </li>
+                  <li>Netzwerkaufbau und operatives Business-Management.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">09/2011 – 07/2017</div>
+              <div class="details">
+                <h3>Automotive Components Linz</h3>
+                <p class="position">
+                  Anlagen Betreuer / Stellvertretender Schichtleiter
+                </p>
+                <ul class="task-list">
+                  <li>
+                    Führung und Schulung von Teams in der
+                    Hochleistungsproduktion.
+                  </li>
+                  <li>
+                    <strong>Roboter-Programmierung (ABB)</strong> und
+                    Prototyping auf nicht linearen Schweißanlagen.
+                  </li>
+                  <li>
+                    Audit-Ansprechpartner und operative Feinplanung bei
+                    Abweichungen.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="station">
+              <div class="jahr-tag">06/2004 – 07/2011</div>
+              <div class="details">
+                <h3>Huber GmbH</h3>
+                <p class="position">Metallfacharbeiter / Monteur</p>
+                <ul class="task-list">
+                  <li>
+                    Koordination komplexer Montagen und Bauabnahmen vor Ort.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="blatt links">
+        <div class="inhalt-box">
+          <h2>Qualifikations-Profil</h2>
+          <div class="ausbildung-gitter">
+            <div
+              class="edu-karte"
+              onclick="
+                openDualModal(
+                  './BFIAusbildung1ZeilbergerStefan.jpg',
+                  './BFIAusbildung2ZeilbergerStefan.jpg',
+                )
+              "
+            >
+              <div class="edu-header">
+                <span class="jahr-tag-tag">ABSCHLUSS</span>
+                <h3>IT-Fachspezialist / Software Engineering</h3>
+              </div>
+              <p>
+                Vertiefung in objektorientierter Programmierung,
+                Systemarchitektur und Qualitätssicherung.
+              </p>
+              <span class="view-trigger">📄 Zeugnis einsehen</span>
+            </div>
+
+            <div
+              class="edu-karte"
+              onclick="openDualModal('./LehrabschlussZeilbergerStefan.jpeg')"
+            >
+              <div class="edu-header">
+                <span class="jahr-tag-tag">Gesellenbrief</span>
+                <h3>Metallfacharbeiter / Maschinenbau</h3>
+              </div>
+              <p>
+                Fundamentale Ausbildung in Werkstoffkunde, Konstruktion und
+                industriellen Fertigungsprozessen.
+              </p>
+              <span class="view-trigger">📄 Dokument öffnen</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div
+        id="zeugnisModal"
+        class="modal"
+        onclick="closeModal()"
+        style="display: none"
+      >
+        <span class="close">&times;</span>
+        <div class="modal-wrapper">
+          <img class="modal-content" id="imgTarget1" src="" alt="Dokument 1" />
+          <img
+            class="modal-content"
+            id="imgTarget2"
+            src=""
+            alt="Dokument 2"
+            style="display: none"
+          />
+        </div>
+      </div>
+      <section class="blatt links">
+        <div class="inhalt-box human-core">
+          <h2>Das Fundament</h2>
+          <div class="human-grid">
+            <div class="ethik-sektion">
+              <h3>Radikale Integrität</h3>
+              <p>
+                Absolute Offenheit – auch wenn es unbequem ist. Die einzige
+                Säule für echtes Vertrauen.
+              </p>
+              <blockquote class="ethik-manifest">
+                „Verlässlichkeit ist die Konsequenz aus Rückgrat.“
+              </blockquote>
+            </div>
+            <div class="familien-sektion">
+              <h3>Der Core-Kernel</h3>
+              <p>
+                Verheiratet mit <strong>Valentina</strong>.<br />
+                Vater von <strong>Tanja, Amy & Jasmin</strong>.
+              </p>
+            </div>
+          </div>
+          <footer class="final-footer">
+            <p>Stefan Zeilberger — Charakter, Kompetenz und Konsequenz.</p>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

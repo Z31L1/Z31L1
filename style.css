@@ -1,0 +1,728 @@
+/* ==========================================================================
+   1. SETTINGS & VARIABLES (Globale Konfiguration)
+   ========================================================================== */
+
+:root {
+  --neon-cyan: #00ffff;
+  --gold: #ffcc00;
+  --red: #cf4b17;
+  --dark-bg: #0a0a0a;
+  --glass: rgba(10, 10, 10, 0.94);
+  --border-glow: rgba(0, 255, 255, 0.2);
+
+  --transition-speed: 0.5s;
+  --easing-custom: cubic-bezier(0.3, 1, 0.22, 1);
+}
+
+/* ==========================================================================
+   2. GENERIC & RESET (Basics)
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+  background-color: var(--dark-bg);
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: #e0e0e0;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ==========================================================================
+   3. ELEMENTS (Unklassifizierte HTML-Tags)
+   ========================================================================== */
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  color: var(--neon-cyan);
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-size: 3rem;
+  border-bottom: 2px solid var(--neon-cyan);
+}
+
+h2 {
+  font-size: 2.5rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p,
+span {
+  font-size: 1.4rem;
+}
+
+/* ==========================================================================
+   4. OBJECTS & LAYOUT (Struktur-Klassen)
+   ========================================================================== */
+/* ==========================================================================
+   DRAMATIC SYSTEM INITIALIZATION
+   ========================================================================== */
+/* ==========================================================================
+   BIDIREKTIONALE ANIMATION
+   ========================================================================== */
+
+   /* --- GLOBALER LOCK --- */
+.haupt-container {
+    width: 100%;
+    /* Wichtig: min-height statt height, damit der Inhalt scrollen kann! */
+    min-height: 100vh; 
+    /* overflow: hidden;  <-- DAS HIER MUSS WEG, sonst ist alles blockiert! */
+    transition: all 0.5s var(--easing-custom);
+    position: relative;
+}
+
+/* Rückkehr-Animation */
+#anschreiben-section {
+    position: relative;
+    background-color: #ffffff !important; /* Weiß ohne Kompromisse */
+    color: #1a1a1a !important;
+    min-height: 100vh;
+    height: auto;
+    width: 100vw;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  transition: 
+    transform 1s cubic-bezier(0.19, 1, 0.22, 1), 
+    filter 0.8s ease, 
+    opacity 0.8s ease;
+  transform-origin: top center;
+}
+
+/* Wenn wir wieder oben sind (Standardzustand) */
+body:not(.scrolled) #anschreiben-section {
+  transform: translateY(0) skewY(0deg);
+  filter: blur(0) brightness(1);
+  opacity: 1;
+}
+
+/* Der Flash-Effekt beim Zurückkehren */
+body.shutdown-sequence::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: white; /* Weißer Flash statt Cyan beim Herunterfahren */
+  animation: shutdown-flash 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shutdown-flash {
+  0% { opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+/* Der Flash-Effekt beim Wechsel */
+body.scrolled::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--neon-cyan);
+  animation: system-flash 0.6s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes system-flash {
+  0% { opacity: 0; transform: scaleY(0); }
+  50% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(0); }
+}
+
+
+/* System gebootet */
+body.scrolled .haupt-container {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* Die Sektionen-Steuerung */
+.haupt-container section:not(:first-child) {
+    display: none; 
+}
+
+body.scrolled .haupt-container section:not(:first-child) {
+    display: flex;
+}
+
+
+@keyframes systemFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hintergrund-Video Initialisierung */
+.hintergrund-container {
+    position: fixed;
+    inset: 0;
+    z-index: -1; 
+    opacity: 0; /* Unsichtbar zu Beginn */
+    visibility: hidden; /* Verhindert Interaktion */
+    transition: opacity 1s ease, visibility 1s ease;
+  opacity: 0;
+  filter: contrast(2) brightness(0);
+  transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+  transform: scale(1.1);
+}
+
+body.scrolled .hintergrund-container {
+    visibility: visible;
+  opacity: 1;
+  filter: contrast(1.1) brightness(0.5);
+  transform: scale(1); /* Zoom-In Effekt beim Start */
+}
+
+/* 3. Button zum Lebenslauf */
+.scroll-down-btn {
+  margin-top: 40px;
+  padding: 12px 25px;
+  background: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: "Segoe UI", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.3s;
+}
+
+/* Brief-Layout Spezifikationen */
+.brief-layout {
+    text-align: left !important;
+    padding: 0 !important; /* Typischer Rand für Briefe */
+    display: flex;
+    flex-direction: column;
+}
+
+.absender-block {
+    font-size: 0.95rem;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.empfaenger-block {
+  font-size: 0.95rem !important;;
+    margin-bottom: 2rem;
+    width: fit-content; 
+    text-align: left; 
+    line-height: 1.2;
+    color: #1a1a1a !important;
+}
+
+/* Datum ebenfalls rechts (falls noch nicht geschehen) */
+.datum-zeile {
+    margin-bottom: 2rem;
+    font-size: 0.95rem !important;
+    color: #555 !important;
+    line-height: 1.2;
+    text-align: right;
+}
+
+.betreff-zeile h1 {
+    font-size: 1.2rem !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    border: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    margin: 20px 0 !important;
+}
+
+.anschreiben-text p {
+    margin-bottom: 15px;
+    font-size: 1rem !important;
+    color: #1a1a1a !important;
+}
+
+.gruss-formel {
+  font-size: 0.95rem !important;
+    margin-top: 30px;
+}
+
+.scroll-down-btn:hover {
+  align-content: baseline;
+  background: var(--neon-cyan);
+  color: #000;
+}
+
+#anschreiben-section .inhalt-box {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    width: 80%;
+    
+}
+
+/* PRINT FIX: Anschreiben immer weiß */
+@media print {
+  #anschreiben-section {
+    page-break-after: always !important;
+  }
+}
+
+
+.hintergrund-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  pointer-events: none;
+}
+
+#parallax-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.5) contrast(1.1);
+}
+
+.blatt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  min-height: 100vh;
+  height: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overscroll-behavior-y: contain;
+  padding: 10vh 0;
+}
+
+.profil-anordnung {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas:
+    "hd hd im"
+    "mf mf im"
+    "kp kp kp";
+  grid-auto-rows: minmax(auto, auto);
+}
+
+.kern-pfeiler-gitter {
+  grid-area: kp;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, auto));
+  gap: 20px;
+  align-content: center;
+}
+
+.ausbildung-gitter {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.projekt-gitter {
+  display: block;
+  margin-top: 20px;
+}
+
+/* ==========================================================================
+   5. COMPONENTS (Spezifische UI-Module)
+   ========================================================================== */
+
+.inhalt-box {
+  width: 80%;
+  min-height: 80vh;
+  padding: 2%;
+  background: var(--glass);
+  border: 1px solid var(--border-glow);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  transition:
+    transform var(--transition-speed) var(--easing-custom),
+    opacity var(--transition-speed);
+}
+
+.blatt.links .inhalt-box {
+  transform: translateX(-150%);
+  opacity: 0;
+}
+
+.blatt.rechts .inhalt-box {
+  transform: translateX(150%);
+  opacity: 0;
+}
+
+.blatt.sichtbar .inhalt-box {
+  transform: translateX(0);
+  opacity: 1;
+  border-left: 5px solid var(--neon-cyan);
+}
+
+.identitaets-modul {
+  grid-area: hd;
+}
+
+.profil-container {
+  grid-area: im;
+}
+
+.manifest {
+  grid-area: mf;
+  font-style: italic;
+}
+
+.profil-bild {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  border: 2px solid var(--neon-cyan);
+  border-radius: 50%;
+}
+
+.bild-glow {
+  position: relative;
+  inset: -5px;
+  z-index: 1;
+  background: var(--neon-cyan);
+  border-radius: 50%;
+  filter: blur(15px);
+  opacity: 0.3;
+}
+
+.spezial-karte,
+.edu-karte {
+  margin: 2%;
+  padding: 2%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #333;
+  transition: all 0.3s ease;
+}
+
+.edu-karte:hover {
+  background: rgba(0, 255, 255, 0.05);
+  border-color: var(--neon-cyan);
+  transform: translateY(-5px);
+}
+
+.fokus-gold {
+  border-color: var(--gold) !important;
+}
+
+.fokus-gold h3 {
+  color: var(--gold);
+}
+
+.balken {
+  height: 2rem;
+  margin-top: 1%;
+  background: #222;
+  border-radius: 0.5rem;
+}
+
+.fuellung {
+  height: 100%;
+  background: var(--neon-cyan);
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+.stationen-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 20px 0 0 20px;
+}
+
+.station {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 30px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.jahr-tag {
+  grid-column: 1;
+  font-family: "Courier New", monospace;
+  color: var(--gold);
+  text-align: right;
+  padding-right: 20px;
+  border-right: 2px solid var(--neon-cyan);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.station:hover .jahr-tag {
+  border-right: 4px solid var(--gold);
+  color: #fff;
+}
+
+.details {
+  grid-column: 2;
+  padding: 0 0 20px 20px;
+}
+
+.position {
+  display: block;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.task-list li {
+  position: relative;
+  padding-left: 25px;
+  margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.task-list li::before {
+  content: ">>";
+  position: absolute;
+  left: 0;
+  color: var(--neon-cyan);
+  font-family: "Courier New", monospace;
+}
+
+.video-container {
+  position: relative;
+  max-width: 30%;
+  margin: 2%;
+}
+
+.privacy-shield {
+  position: relative;
+  background: #000;
+  cursor: pointer;
+}
+
+.generator-video.dimmed {
+  filter: blur(4px) brightness(0.7) contrast(1.2);
+  transition: filter 0.5s ease;
+  width: 100%;
+}
+
+.privacy-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  padding: 2px 6px;
+  background: rgba(255, 0, 0, 0.6);
+  color: white;
+  font-weight: bold;
+  border-radius: 3px;
+}
+
+.tech-tag {
+  color: var(--neon-cyan);
+  display: inline-block;
+  font-weight: bold;
+}
+
+.untertitel {
+  color: var(--neon-cyan);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  backdrop-filter: blur(10px);
+}
+
+.modal-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 95%;
+  height: 90vh;
+  margin: auto;
+}
+
+.modal-content {
+  max-width: 48%;
+  max-height: 85vh;
+  object-fit: contain;
+  border: 2px solid var(--neon-cyan);
+}
+
+/* ==========================================================================
+   6. UTILITIES & MEDIA QUERIES (Adaptive Styles)
+   ========================================================================= */
+
+@media (max-width: 1024px) {
+  .modal-wrapper {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    max-height: 45%;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    scroll-snap-type: none;
+  }
+
+  .profil-anordnung {
+    grid-template-columns: 1fr;
+    grid-template-areas: "hd" "im" "mf" "kp";
+  }
+}
+
+@media (pointer: coarse) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+}
+
+/* ==========================================================================
+   7. PRINT STYLES (@media print) - KOMPAKT-VERSION
+   ========================================================================== */
+
+@media print {
+  /* SEITEN-KONFIGURATION */
+  @page {
+    margin: 1.2cm;
+    size: A4;
+  }
+
+  /* RESET & FARB-OPTIMIERUNG */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    transition: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ENTFERNUNG INTERAKTIONEN */
+  .hintergrund-container, 
+  .bild-glow, 
+  .modal, 
+  .video-container, 
+  .privacy-overlay,
+  button,
+  #parallax-bg {
+    display: none !important;
+  }
+
+  /* LAYOUT-KOMPRIMIERUNG */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .blatt {
+    display: block !important; 
+    width: 100% !important;
+    min-height: 0 !important;  
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 0 20pt 0 !important; 
+    page-break-inside: auto !important; 
+  }
+
+  .inhalt-box {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    border: none !important;
+    border-bottom: 0.5pt solid #eee !important;
+    padding: 10pt 0 !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  
+  .profil-anordnung {
+    display: flex !important;
+    flex-direction: row;
+    align-items: center;
+    gap: 20pt;
+    margin-bottom: 15pt;
+  }
+
+  .profil-bild {
+    width: 80pt !important;
+    height: 80pt !important;
+    border: 1pt solid #000 !important;
+    margin: 0 !important;
+    float: none !important;
+  }
+
+  /* TYPOGRAFIE-SKALIERUNG */
+  h1 { font-size: 20pt !important; margin-bottom: 5pt; }
+  h2 { font-size: 16pt !important; margin-top: 15pt; border-bottom: 1pt solid #ccc !important; }
+  h3 { font-size: 12pt !important; margin-top: 5pt; }
+  p, li, span { font-size: 10pt !important; line-height: 1.3; color: #222 !important; }
+
+  /* LISTEN KOMPRIMIERUNG */
+  .stationen-scroll {
+    gap: 15pt !important;
+    padding: 0 !important;
+  }
+
+  .station {
+    display: grid !important;
+    grid-template-columns: 100pt 1fr !important;
+    gap: 10pt !important;
+    margin-bottom: 10pt !important;
+    page-break-inside: avoid;
+  }
+
+  .jahr-tag {
+    text-align: left !important;
+    padding-right: 5pt !important;
+    border-right: 1.5pt solid #000 !important;
+    font-size: 9pt !important;
+  }
+
+  .details {
+    padding: 0 0 0 10pt !important;
+  }
+
+  .task-list li {
+    margin-bottom: 2pt !important;
+    padding-left: 15pt !important;
+  }
+}
