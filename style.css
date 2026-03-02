@@ -26,7 +26,7 @@ html {
   font-size: 100%;
   background-color: var(--dark-bg);
   scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: y proximity;
 }
 
 body {
@@ -596,7 +596,7 @@ body.scrolled .hintergrund-container {
 
 @media (max-width: 768px) {
   html {
-    scroll-snap-type: none;
+    scroll-snap-type: y proximity;
   }
 
   .profil-anordnung {
